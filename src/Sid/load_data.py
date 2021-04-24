@@ -9,16 +9,27 @@ import torchvision.transforms.functional as F
 from sklearn.model_selection import train_test_split
 from util import box_ops
 
+
 def toTensor(img, **params):
     return F.to_tensor(img)
 
 
 def load_data(path):
+    """
+    Read the data from the h5 file.
+    :param path: path to the h5 file
+    :return:
+    """
 
     return h5py.File(path, 'r')
 
 
 def clean_data(data):
+    """
+    Takes care of cleaning and the splitting the data into the train and test sets.
+    :param data:
+    :return:
+    """
 
     # load the image
     cleaned_data = []
@@ -38,7 +49,7 @@ def clean_data(data):
                     ymax = data['labels'][str(idx)][j][3] / h
                     boxes.append([xmin, ymin, xmax, ymax])
                     labels.append(data['labels'][str(idx)][j][-1] - 1)
-            if len(boxes) is not None:
+            if len(boxes) is not 0:
                 cleaned_frame.append(img)
                 cleaned_frame.append(boxes)
                 cleaned_frame.append(labels)
@@ -93,7 +104,7 @@ class CustomDataset(Dataset):
         return img, target
 
     def __len__(self):
-        return self.data['rdms'].shape[0]
+        return len(self.data)
 
 """
 
