@@ -1,4 +1,3 @@
-import os
 import numpy as np
 import pandas as pd
 import torch
@@ -70,7 +69,6 @@ class CustomDataset(Dataset):
     def __getitem__(self, idx):
         """
         Load the object image and its target for the given index.
-
         :param idx: index of the radar frame to be read
         :return: radar_frame and its corresponding target list
         """
@@ -97,7 +95,6 @@ class CustomDataset(Dataset):
 
     def __len__(self):
         return len(self.data)
-
 
 """
 to run:
