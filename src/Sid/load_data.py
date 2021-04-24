@@ -18,23 +18,21 @@ def load_data(path):
     """
     Read the data from the h5 file.
     :param path: path to the h5 file
-    :return:
+    :return: H5 data object
     """
-
     return h5py.File(path, 'r')
 
 
 def clean_data(data):
     """
     Takes care of cleaning and the splitting the data into the train and test sets.
-    :param data:
-    :return:
+    :param data: input H5 data object
+    :return: cleaned train and test sets containing img, boxes and labels.
     """
-
-    # load the image
     cleaned_data = []
     for idx in range(len(data['rdms'])):
         cleaned_frame = []
+        # check to see if at least one object of interest exists in the frame.
         if len(data['labels'][str(idx)]) is not 0:
             img = np.array(data['rdms'][idx])
             h, w = img.shape[0], img.shape[1]
@@ -42,6 +40,7 @@ def clean_data(data):
             boxes = []
             labels = []
             for j in range(len(data['labels'][str(idx)])):
+                # check to see if the label is not "0" ('no object') and proceed
                 if data['labels'][str(idx)][j][-1] is not 0:
                     xmin = data['labels'][str(idx)][j][0] / w
                     ymin = data['labels'][str(idx)][j][1] / h
@@ -49,11 +48,13 @@ def clean_data(data):
                     ymax = data['labels'][str(idx)][j][3] / h
                     boxes.append([xmin, ymin, xmax, ymax])
                     labels.append(data['labels'][str(idx)][j][-1] - 1)
+            # if length of the box is not zero, then add the obj of interest to the frame list.
             if len(boxes) is not 0:
                 cleaned_frame.append(img)
                 cleaned_frame.append(boxes)
                 cleaned_frame.append(labels)
                 assert len(boxes) == len(labels)
+        # if the frame contains at least one obj, then add it to the final data list.
         if len(cleaned_frame) is not 0:
             cleaned_data.append(cleaned_frame)
     # split the dataset into train and test
@@ -106,12 +107,11 @@ class CustomDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
-"""
 
-to run
+"""
+to run:
 
 data = load_data(path)
-
 train, test = clean_data(data)
 
 train_dataset = CustomDataset(train, split="train")
