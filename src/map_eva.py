@@ -3,7 +3,8 @@ from collection import Counter
 from iou import intersection_over_union
 
 def mean_avg_precision(
-    pred_boxes, true_boxes, iou_threshold = 0.5, box_format="corners", num_classes = 5):
+    pred_boxes, true_boxes, iou_threshold = 0.5, box_format="corners", num_classes = 4):
+    # classes: '0':'pedestrian','1':'car', '2':'truck', '3':'no object'
     # pred_boxes (list):[[train_idx, class_pred, prob_score, x1, y1, x2, y2], ...]
     avg_precisions = []
     epsilon = 1e-6
