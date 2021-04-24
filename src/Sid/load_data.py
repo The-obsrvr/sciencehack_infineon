@@ -4,7 +4,7 @@ import pandas as pd
 import torch
 import h5py
 import albumentations as A
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 import torchvision.transforms.functional as F
 from sklearn.model_selection import train_test_split
 from util import box_ops
@@ -85,12 +85,11 @@ class CustomDataset(Dataset):
         # load the image
         img = np.array(self.data['img'][idx])
         h, w = img.shape[0], img.shape[1]
-        # convert box into a torch.Tensor
+        # convert boxes, labels and image id into a torch.Tensor
         boxes = torch.tensor(self.data["boxes"][idx], dtype=torch.float32)
-        # convert label into a torch.Tensor
         labels = torch.tensor(self.data["labels"][idx], dtype=torch.float32)
-
         img_id = torch.Tensor(idx)
+
         area = h * w * (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
         # suppose all instances are not crowd
         iscrowd = torch.zeros(len(self.data['labels'][idx]), dtype=torch.int64)
@@ -99,8 +98,8 @@ class CustomDataset(Dataset):
         transformed = self.transform(image=img)
         img = transformed["image"]
 
-        for idx, bboxes in enumerate(target['boxes']):
-            target['boxes'][idx] = box_ops.box_xyxy_to_cxcywh(bboxes)
+        for i, bboxes in enumerate(target['boxes']):
+            target['boxes'][i] = box_ops.box_xyxy_to_cxcywh(bboxes)
 
         return img, target
 
