@@ -4,6 +4,7 @@ import torch.nn.functional as F
 from math import sqrt
 from itertools import product as product
 import torchvision
+import torch
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -482,7 +483,10 @@ class SSD300(nn.Module):
 
                     # Suppress boxes whose overlaps (with this box) are greater than maximum overlap
                     # Find such boxes and update suppress indices
-                    suppress = torch.max(suppress, overlap[box] > max_overlap)
+                    condition = overlap[box] > max_overlap
+                    condition = torch.tensor(condition, dtype=torch.uint8).to(device)
+                    # print(torch.tensor(condition,dtype=torch.uint8))
+                    suppress = torch.max(suppress, condition)
                     # The max operation retains previously suppressed boxes, like an 'OR' operation
 
                     # Don't suppress this box, even though it has an overlap of 1 with itself

@@ -1,5 +1,5 @@
 import torch
-from collection import Counter
+from collections import Counter
 from iou import intersection_over_union
 
 def mean_avg_precision(

@@ -2,10 +2,10 @@ import time
 import torch.backends.cudnn as cudnn
 import torch.optim
 import torch.utils.data
-from .ssd300 import SSD300, MultiBoxLoss
-from .utils import *
-from .load_data import CustomDataset, load_and_clean_data
-from .eval import evaluate
+from ssd300 import SSD300, MultiBoxLoss
+from utils import *
+from load_data import CustomDataset, load_and_clean_data, collate_fn
+from eval import evaluate
 
 # Data params
 data_path = "../../data/data.h5"
@@ -15,7 +15,7 @@ n_classes = 3
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Learning parameters
-checkpoint = "../../checkpoints/checkpoint_ssd300.pth.tar"  # path to model checkpoint, None if none
+checkpoint = None#"../../checkpoints/checkpoint_ssd300.pth.tar"  # path to model checkpoint, None if none
 batch_size = 8  # batch size
 iterations = 100  # number of iterations to train
 print_freq = 200  # print training status every __ batches
@@ -33,29 +33,27 @@ def main():
     Training.
     """
     global start_epoch, label_map, epoch, checkpoint, decay_lr_at
-
+    biases = list()
+    not_biases = list()
+    model = SSD300(n_classes=n_classes)
+    optimizer = torch.optim.SGD(params=[{'params': biases, 'lr': 2 * lr}, {'params': not_biases}],
+                                lr=lr, momentum=momentum, weight_decay=weight_decay)
     # Initialize model or load checkpoint
     if checkpoint is None:
         start_epoch = 0
-        model = SSD300(n_classes=n_classes)
         # Initialize the optimizer, with twice the default learning rate for biases, as in the original Caffe repo
-        biases = list()
-        not_biases = list()
         for param_name, param in model.named_parameters():
             if param.requires_grad:
                 if param_name.endswith('.bias'):
                     biases.append(param)
                 else:
                     not_biases.append(param)
-        optimizer = torch.optim.SGD(params=[{'params': biases, 'lr': 2 * lr}, {'params': not_biases}],
-                                    lr=lr, momentum=momentum, weight_decay=weight_decay)
-
     else:
-        checkpoint = torch.load(checkpoint)
+        checkpoint_file = torch.load(checkpoint)
+        model.load_state_dict(checkpoint_file['model'])
+        optimizer.load_state_dict(checkpoint_file['optimizer'])
         start_epoch = checkpoint['epoch'] + 1
         print('\nLoaded checkpoint from epoch %d.\n' % start_epoch)
-        model = checkpoint['model']
-        optimizer = checkpoint['optimizer']
 
     # Move to default device
     model = model.to(device)
@@ -64,14 +62,14 @@ def main():
     # Custom dataloaders
     #  :TODO: change to our data loaders
 
-    train, test = load_and_clean_data(data_path)
+    train_data, test = load_and_clean_data(data_path)
 
-    train_dataset = CustomDataset(train, split="train")
+    train_dataset = CustomDataset(train_data, split="train")
     train_sampler = torch.utils.data.RandomSampler(train_dataset)
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, sampler=train_sampler,
-                                               pin_memory=True)
-    test_dataset = CustomDataset(test, split="train")
-    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=32)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, sampler=train_sampler,
+                                               pin_memory=True, collate_fn=collate_fn)
+    test_dataset = CustomDataset(test, split="test")
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=32, collate_fn=collate_fn)
 
     # Calculate total number of epochs to train and the epochs to decay learning rate at (i.e. convert iterations to epochs)
     # To convert iterations to epochs, divide iterations by the number of iterations per epoch

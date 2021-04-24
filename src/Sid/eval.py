@@ -1,35 +1,41 @@
-from .utils import *
-from .load_data import CustomDataset, load_and_clean_data
+from utils import *
+from load_data import CustomDataset, load_and_clean_data
 
 from tqdm import tqdm
 from torch.utils.data import DataLoader
 from pprint import PrettyPrinter
+import torch
+from map_eva import mean_avg_precision
 
-# Good formatting when printing the APs for each class and mAP
-pp = PrettyPrinter()
-
-# Parameters
-data_path = '../../data/data.h5'
-keep_difficult = True  # difficult ground truth objects must always be considered in mAP calculation, because these objects DO exist!
-batch_size = 64
-workers = 4
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-checkpoint = '../../chwckpoints/checkpoint_ssd300.pth.tar'
-
-# Load model checkpoint that is to be evaluated
-checkpoint = torch.load(checkpoint)
-model = checkpoint['model']
-model = model.to(device)
-
-# Switch to eval mode
-model.eval()
-
-# load the test data
-
-_, test = load_and_clean_data(data_path)
-
-test_dataset = CustomDataset(test, split="test")
-test_loader = DataLoader(test_dataset, batch_size=32)
+# # Good formatting when printing the APs for each class and mAP
+# pp = PrettyPrinter()
+#
+# # Parameters
+# data_path = '../../data/data.h5'
+# keep_difficult = True  # difficult ground truth objects must always be considered in mAP calculation, because these objects DO exist!
+# batch_size = 64
+# workers = 4
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# checkpoint = '../../checkpoints/checkpoint_ssd300.pth.tar'
+#
+# # Load model checkpoint that is to be evaluated
+# # checkpoint = torch.load(checkpoint)
+# # model = checkpoint['model']
+#
+# model = Model()
+# model = model.load_state_dict(torch.load(model_file))
+#
+# model = model.to(device)
+#
+# # Switch to eval mode
+# model.eval()
+#
+# # load the test data
+#
+# _, test = load_and_clean_data(data_path)
+#
+# test_dataset = CustomDataset(test, split="test")
+# test_loader = DataLoader(test_dataset, batch_size=32)
 
 def evaluate(test_loader, model):
     """
@@ -76,10 +82,11 @@ def evaluate(test_loader, model):
             true_difficulties.extend(difficulties)
 
         # Calculate mAP
-        APs, mAP = calculate_mAP(det_boxes, det_labels, det_scores, true_boxes, true_labels, true_difficulties)
+        # APs, mAP = calculate_mAP(det_boxes, det_labels, det_scores, true_boxes, true_labels, true_difficulties)
+        mAP = mean_avg_precision(det_boxes, true_boxes)
 
     # Print AP for each class
-    pp.pprint(APs)
+    # pp.pprint(APs)
 
     print('\nMean Average Precision (mAP): %.3f' % mAP)
 

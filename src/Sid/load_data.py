@@ -53,7 +53,7 @@ def load_and_clean_data(path):
     data_df = pd.DataFrame(cleaned_data, columns=["img", "boxes", "labels"])
 
     train, test = train_test_split(data_df, test_size=0.2, random_state=42, shuffle=True)
-
+    train, test = train.reset_index(drop=True), test.reset_index(drop=True)
     return train, test
 
 
@@ -61,6 +61,7 @@ class CustomDataset(Dataset):
 
     def __init__(self, data_df, split='train'):
 
+        self.split = split
         self.data = data_df
         special_aug_list = [A.HorizontalFlip(p=1), A.Flip(p=1),  # vertical
                             A.Transpose(p=1), A.RandomRotate90(p=1), A.RandomSizedBBoxSafeCrop(256, 32, p=1),
@@ -82,30 +83,62 @@ class CustomDataset(Dataset):
         :return: radar_frame and its corresponding target list
         """
         # load the image
-        img = np.array(self.data['img'][idx])
+        print(idx)
+        img = np.array(self.data.iloc[idx]['img'])
         h, w = img.shape[0], img.shape[1]
         # convert boxes, labels and image id into a torch.Tensor
-        boxes = torch.tensor(self.data["boxes"][idx], dtype=torch.float32)
-        labels = torch.tensor(self.data["labels"][idx], dtype=torch.float32)
+        boxes = torch.tensor(self.data.iloc[idx]["boxes"], dtype=torch.float32)
+        labels = torch.tensor(self.data.iloc[idx]["labels"], dtype=torch.float32)
         img_id = torch.Tensor(idx)
 
         area = h * w * (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
         # suppose all instances are not crowd
-        iscrowd = torch.zeros(len(self.data['labels'][idx]), dtype=torch.int64)
+        iscrowd = torch.zeros(len(self.data.iloc[idx]['labels']), dtype=torch.int64)
 
         transformed = self.transform(image=img, bboxes=boxes, category_ids=labels)
         img = transformed["image"]
         
-        target = {"boxes": torch.tensor(transformed["bboxes"]), "labels": labels,
-                  "image_id": img_id, "area": area, "iscrowd": iscrowd}
+        target = {"boxes": torch.tensor(transformed["bboxes"], dtype=torch.float32), "labels": labels,}
+                  # "image_id": img_id, "area": area, "iscrowd": iscrowd}
 
         for i, bboxes in enumerate(target['boxes']):
             target['boxes'][i] = box_ops.box_xyxy_to_cxcywh(bboxes)
 
-        return img.repeat(3, 1, 1), torch.tensor((target['boxes'])), torch.tensor((target['labels'])), torch.zeros(1)
+        return img.repeat(3, 1, 1), torch.tensor((target['boxes']),dtype=torch.float32)[None,...], torch.tensor((target['labels']))[None,...], torch.zeros(1)
 
     def __len__(self):
-        return len(self.data)
+        if self.split == 'train':
+            return int(len(self.data) * 0.8)
+        else:
+            return int(len(self.data) * 0.2)
+
+
+def collate_fn(batch):
+    """
+    Since each image may have a different number of objects, we need a collate function (to be passed to the DataLoader).
+    This describes how to combine these tensors of different sizes. We use lists.
+    Note: this need not be defined in this Class, can be standalone.
+    :param batch: an iterable of N sets from __getitem__()
+    :return: a tensor of images, lists of varying-size tensors of bounding boxes, labels, and difficulties
+    """
+
+    images = list()
+    boxes = list()
+    labels = list()
+    difficulties = list()
+
+    for b in batch:
+        images.append(b[0])
+        boxes.append(b[1])
+        labels.append(b[2])
+        difficulties.append(b[3])
+
+    for i in range(len(boxes)):
+        boxes[i] = boxes[i].squeeze(0)
+        labels[i] = labels[i].squeeze(0)
+    images = torch.stack(images, dim=0)
+
+    return images, boxes, labels, difficulties  # tensor (N, 3, 300, 300), 3 lists of N tensors each
 
 """
 to run:
@@ -118,10 +151,10 @@ test_dataset = CustomDataset(test, split="test")
 train_dataloader = DataLoader(train_dataset)
 
 """
-train, test = load_and_clean_data('../data/data.h5')
-dataset = CustomDataset(train, split='train')
-data_loader = DataLoader(dataset)
-
-for img, box, label, _ in data_loader:
-    print()
+# train, test = load_and_clean_data('../../data/data.h5')
+# dataset = CustomDataset(train, split='train')
+# data_loader = DataLoader(dataset)
+#
+# for img, box, label, _ in data_loader:
+#     print()
 
