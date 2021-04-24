@@ -69,10 +69,10 @@ class CustomDataset(Dataset):
 
         if split == 'train':
             self.transform = A.Compose(
-                [random_special_aug, A.Normalize([385], [2691.76]), A.Lambda(p=1, image=toTensor)],
+                [random_special_aug, A.Normalize([385], [2691.76]), A.Resize(300, 300), A.Lambda(p=1, image=toTensor)],
                 bbox_params=A.BboxParams(format='coco', label_fields=['category_ids']))
         if split == 'test':
-            self.transform = A.Compose([A.Normalize([385], [2691.76]), A.Lambda(p=1, image=toTensor)],
+            self.transform = A.Compose([A.Normalize([385], [2691.76]), A.Resize(300, 300), A.Lambda(p=1, image=toTensor)],
                                        bbox_params=A.BboxParams(format='coco', label_fields=['category_ids']))
 
     def __getitem__(self, idx):
@@ -102,7 +102,7 @@ class CustomDataset(Dataset):
         for i, bboxes in enumerate(target['boxes']):
             target['boxes'][i] = box_ops.box_xyxy_to_cxcywh(bboxes)
 
-        return img.repeat(3, 1, 1), target
+        return img.repeat(3, 1, 1), torch.tensor((target['boxes'])), torch.tensor((target['labels'])), torch.empty(1)
 
     def __len__(self):
         return len(self.data)
@@ -122,6 +122,6 @@ train, test = load_and_clean_data('../data/data.h5')
 dataset = CustomDataset(train, split='train')
 data_loader = DataLoader(dataset)
 
-for img, target in data_loader:
+for img, box, label, _ in data_loader:
     print()
 
