@@ -5,7 +5,7 @@ import torch.utils.data
 from .ssd300 import SSD300, MultiBoxLoss
 from .utils import *
 from .load_data import CustomDataset, load_and_clean_data
-
+from .eval import evaluate
 
 # Data params
 data_path = "../../data/data.h5"
@@ -15,10 +15,9 @@ n_classes = 3
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Learning parameters
-checkpoint = None  # path to model checkpoint, None if none
+checkpoint = "../../checkpoints/checkpoint_ssd300.pth.tar"  # path to model checkpoint, None if none
 batch_size = 8  # batch size
 iterations = 100  # number of iterations to train
-workers = 4  # number of workers for loading data in the DataLoader
 print_freq = 200  # print training status every __ batches
 lr = 1e-3  # learning rate
 decay_lr_at = [70, 90]  # decay learning rate after these many iterations
@@ -65,14 +64,14 @@ def main():
     # Custom dataloaders
     #  :TODO: change to our data loaders
 
-    train, _ =
+    train, test = load_and_clean_data(data_path)
 
-    train_dataset = PascalVOCDataset(data_folder,
-                                     split='train',
-                                     keep_difficult=keep_difficult)
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True,
-                                               collate_fn=train_dataset.collate_fn, num_workers=workers,
-                                               pin_memory=True)  # note that we're passing the collate function here
+    train_dataset = CustomDataset(train, split="train")
+    train_sampler = torch.utils.data.RandomSampler(train_dataset)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, sampler=train_sampler,
+                                               pin_memory=True)
+    test_dataset = CustomDataset(test, split="train")
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=32)
 
     # Calculate total number of epochs to train and the epochs to decay learning rate at (i.e. convert iterations to epochs)
     # To convert iterations to epochs, divide iterations by the number of iterations per epoch
@@ -89,6 +88,7 @@ def main():
 
         # One epoch's training
         train(train_loader=train_loader,
+              test_loader=test_loader,
               model=model,
               criterion=criterion,
               optimizer=optimizer,
@@ -98,7 +98,7 @@ def main():
         save_checkpoint(epoch, model, optimizer)
 
 
-def train(train_loader, model, criterion, optimizer, epoch):
+def train(train_loader, test_loader, model, criterion, optimizer, epoch):
     """
     One epoch's training.
     :param train_loader: DataLoader for training data
@@ -146,6 +146,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
 
         start = time.time()
 
+        evaluate(test_loader=test_loader, model=model)
         # Print status
         if i % print_freq == 0:
             print('Epoch: [{0}][{1}/{2}]\t'
