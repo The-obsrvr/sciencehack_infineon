@@ -102,7 +102,7 @@ class CustomDataset(Dataset):
         for i, bboxes in enumerate(target['boxes']):
             target['boxes'][i] = box_ops.box_xyxy_to_cxcywh(bboxes)
 
-        return img.repeat(3, 1, 1), torch.tensor((target['boxes'])), torch.tensor((target['labels'])), torch.empty(1)
+        return img.repeat(3, 1, 1), torch.tensor((target['boxes'])), torch.tensor((target['labels'])), torch.zeros(1)
 
     def __len__(self):
         return len(self.data)
