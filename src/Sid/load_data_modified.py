@@ -7,6 +7,7 @@ from torch.utils.data import Dataset
 import torchvision.transforms.functional as F
 from sklearn.model_selection import train_test_split
 from util import box_ops
+import random
 
 
 def toTensor(img, **params):
@@ -32,13 +33,13 @@ def load_and_clean_data(path):
             labels = []
             for j in range(len(data['labels'][str(idx)])):
                 # check to see if the label is not "0" ('no object') and proceed
-                if data['labels'][str(idx)][j][-1] is not 0:
+                if data['labels'][str(idx)][j][-1] is not 3:
                     xmin = data['labels'][str(idx)][j][0] / w
                     ymin = data['labels'][str(idx)][j][1] / h
                     xmax = data['labels'][str(idx)][j][2] / w
                     ymax = data['labels'][str(idx)][j][3] / h
                     boxes.append([xmin, ymin, xmax, ymax])
-                    labels.append(data['labels'][str(idx)][j][-1] - 1)
+                    labels.append(data['latr(idx)][j][-1])
             # if length of the box is not zero, then add the obj of interest to the frame list.
             if len(boxes) is not 0:
                 cleaned_frame.append(img)
@@ -61,10 +62,18 @@ class CustomDataset(Dataset):
     def __init__(self, data_df, split='train'):
 
         self.data = data_df
-        if split=='train':
-            self.transform = A.Compose([A.Normalize([385], [2691.76]), A.Lambda(p=1, image=toTensor)])
+        special_aug_list = [A.HorizontalFlip(p=1), A.Flip(p=1),  # vertical
+                            A.Transpose(p=1), A.RandomRotate90(p=1), A.RandomSizedBBoxSafeCrop(256, 32, p=1),
+                            A.LongestMaxSize(p=1), ]
+        random_special_aug = random.choices([A.NoOp(), random.choice(special_aug_list)], weights=[0.4, 0.6])[0]
+
+        if split == 'train':
+            self.transform = A.Compose(
+                [random_special_aug, A.Normalize([385], [2691.76]), A.Lambda(p=1, image=toTensor)],
+                bbox_params=A.BboxParams(format='coco', label_fields=['category_ids']))
         if split == 'test':
-            self.transform = A.Compose([A.Normalize([385], [2691.76]), A.Lambda(p=1, image=toTensor)])
+            self.transform = A.Compose([A.Normalize([385], [2691.76]), A.Lambda(p=1, image=toTensor)],
+                                       bbox_params=A.BboxParams(format='coco', label_fields=['category_ids']))
 
     def __getitem__(self, idx):
         """
@@ -84,9 +93,11 @@ class CustomDataset(Dataset):
         # suppose all instances are not crowd
         iscrowd = torch.zeros(len(self.data['labels'][idx]), dtype=torch.int64)
 
-        target = {"boxes": boxes, "labels": labels, "image_id": img_id, "area": area, "iscrowd": iscrowd}
-        transformed = self.transform(image=img)
+        transformed = self.transform(image=img, bboxes=boxes, category_ids=labels)
         img = transformed["image"]
+
+        target = {"boxes": torch.tensor(transformed["bboxes"]), "labels": labels,
+                  "image_id": img_id, "area": area, "iscrowd": iscrowd}
 
         for i, bboxes in enumerate(target['boxes']):
             target['boxes'][i] = box_ops.box_xyxy_to_cxcywh(bboxes)
