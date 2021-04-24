@@ -2,21 +2,56 @@
 <project version="4">
   <component name="PublishConfigData">
     <serverData>
-      <paths name="five@astranaar.dbs.ifi.lmu.de:22">
+      <paths name="hannan@zypern.dbs.ifi.lmu.de:22 password">
         <serverdata>
           <mappings>
             <mapping local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>
-      <paths name="five@astranaar.dbs.ifi.lmu.de:22 password">
+      <paths name="hannan@zypern.dbs.ifi.lmu.de:22 password (1)">
         <serverdata>
           <mappings>
             <mapping local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>
-      <paths name="five@astranaar.dbs.ifi.lmu.de:22 password (1)">
+      <paths name="koner@iona.dbs.ifi.lmu.de:22">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="koner@iona.dbs.ifi.lmu.de:22 password">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="koner@zandalar.dbs.ifi.lmu.de:22">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="koner@zandalar.dbs.ifi.lmu.de:22 password">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="koner@zypern.dbs.ifi.lmu.de:22">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="koner@zypern.dbs.ifi.lmu.de:22 password">
         <serverdata>
           <mappings>
             <mapping local="$PROJECT_DIR$" web="/" />
