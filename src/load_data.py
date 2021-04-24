@@ -2,14 +2,24 @@ import os
 import numpy as np
 import torch
 import h5py
+import albumentations as A
+from torch.utils.data import Dataset, DataLoader
+import torchvision.transforms as F
 
+def toTensor(img, **params):
+    return F.to_tensor(img)
+def normalize(img, **params):
+    return F.to_tensor(img)
 
-class DataGenerator(object):
+class CustomDataset(Dataset):
 
-    def __init__(self, path):
+    def __init__(self, path, split='train'):
 
         self.data = h5py.File(path, 'r')
-        
+        self.split = split
+        # self.transform = A.Compose([A.Normalize([0.5], [0.5]),A.Lambda(p=1, image=toTensor)])
+        self.transform = F.Compose([F.ToTensor(), F.Normalize([385], [2691.76])])
+
     def __getitem__(self, idx):
         """
         Load the object image and its target for the given index.
@@ -53,10 +63,18 @@ class DataGenerator(object):
         target["image_id"] = img_id
         target["area"] = area
         target["iscrowd"] = iscrowd
-
+        transformed = self.transform(img)
+        img = transformed#["image"]
         return img, target
 
     def __len__(self):
-        return len(self.imgs)
+        return self.data['rdms'].shape[0]
+
+dataset = CustomDataset('../data/data.h5')
+data_loader = DataLoader(dataset)
+
+for img, target in data_loader:
+    print()
+
 
 
