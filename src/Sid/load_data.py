@@ -14,21 +14,13 @@ def toTensor(img, **params):
     return F.to_tensor(img)
 
 
-def load_data(path):
+def load_and_clean_data(path):
     """
-    Read the data from the h5 file.
-    :param path: path to the h5 file
-    :return: H5 data object
-    """
-    return h5py.File(path, 'r')
-
-
-def clean_data(data):
-    """
-    Takes care of cleaning and the splitting the data into the train and test sets.
-    :param data: input H5 data object
+    Takes care of loading, cleaning and the splitting the data into the train and test sets.
+    :param path: input H5 data object path
     :return: cleaned train and test sets containing img, boxes and labels.
     """
+    data = h5py.File(path, 'r')
     cleaned_data = []
     for idx in range(len(data['rdms'])):
         cleaned_frame = []
@@ -110,8 +102,7 @@ class CustomDataset(Dataset):
 """
 to run:
 
-data = load_data(path)
-train, test = clean_data(data)
+train, test = load_and_clean_data(path)
 
 train_dataset = CustomDataset(train, split="train")
 test_dataset = CustomDataset(test, split="test")
