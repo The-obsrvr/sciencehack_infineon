@@ -6,6 +6,7 @@ import albumentations as A
 from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms.functional as F
 from util import box_ops
+import random
 
 def toTensor(img, **params):
     return F.to_tensor(img)
@@ -17,8 +18,14 @@ class CustomDataset(Dataset):
 
         self.data = h5py.File(path, 'r')
         self.split = split
-        if split=='train':
-            self.transform = A.Compose([A.Normalize([385], [2691.76]), A.Lambda(p=1, image=toTensor)])
+
+        spacial_aug_list = [A.HorizontalFlip(p=1), A.Flip(p=1),  # vertical
+                            A.Transpose(p=1), A.RandomRotate90(p=1), A.RandomSizedBBoxSafeCrop(256, 32, p=1),
+                            A.LongestMaxSize(p=1), ]
+        random_spacial_aug = random.choices([A.NoOp(), random.choice(spacial_aug_list)], weights=[0.4, 0.6])[0]
+
+        if split == 'train':
+            self.transform = A.Compose([random_spacial_aug, A.Normalize([385], [2691.76]), A.Lambda(p=1, image=toTensor)])
         if split == 'test':
             self.transform = A.Compose([A.Normalize([385], [2691.76]), A.Lambda(p=1, image=toTensor)])
 
