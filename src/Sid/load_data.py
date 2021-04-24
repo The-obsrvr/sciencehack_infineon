@@ -3,7 +3,7 @@ import pandas as pd
 import torch
 import h5py
 import albumentations as A
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms.functional as F
 from sklearn.model_selection import train_test_split
 from util import box_ops
@@ -95,7 +95,7 @@ class CustomDataset(Dataset):
 
         transformed = self.transform(image=img, bboxes=boxes, category_ids=labels)
         img = transformed["image"]
-
+        
         target = {"boxes": torch.tensor(transformed["bboxes"]), "labels": labels,
                   "image_id": img_id, "area": area, "iscrowd": iscrowd}
 
@@ -118,6 +118,10 @@ test_dataset = CustomDataset(test, split="test")
 train_dataloader = DataLoader(train_dataset)
 
 """
+train, test = load_and_clean_data('../data/data.h5')
+dataset = CustomDataset(train, split='train')
+data_loader = DataLoader(dataset)
 
-
+for img, box, label, _ in data_loader:
+    print()
 
