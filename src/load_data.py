@@ -43,6 +43,7 @@ class CustomDataset(Dataset):
                 xmax = self.data['labels'][str(idx)][j][2] / w
                 ymax = self.data['labels'][str(idx)][j][3] / h
                 boxes.append([xmin, ymin, xmax, ymax])
+
                 labels.append(self.data['labels'][str(idx)][j][-1])
         else:
             boxes.append(None)
@@ -75,11 +76,11 @@ class CustomDataset(Dataset):
     def __len__(self):
         return self.data['rdms'].shape[0]
 
-dataset = CustomDataset('../data/data.h5')
-data_loader = DataLoader(dataset)
-
-for img, target in data_loader:
-    print()
+# dataset = CustomDataset('../data/data.h5')
+# data_loader = DataLoader(dataset)
+#
+# for img, target in data_loader:
+#     print()
 
 
 
