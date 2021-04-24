@@ -25,9 +25,10 @@ class CustomDataset(Dataset):
         random_spacial_aug = random.choices([A.NoOp(), random.choice(spacial_aug_list)], weights=[0.4, 0.6])[0]
 
         if split == 'train':
-            self.transform = A.Compose([random_spacial_aug, A.Normalize([385], [2691.76]), A.Lambda(p=1, image=toTensor)])
+            self.transform = A.Compose([random_spacial_aug, A.Normalize([385], [2691.76]), A.Lambda(p=1, image=toTensor)],
+                                            bbox_params=A.BboxParams(format='coco', label_fields=['category_ids']))
         if split == 'test':
-            self.transform = A.Compose([A.Normalize([385], [2691.76]), A.Lambda(p=1, image=toTensor)])
+            self.transform = A.Compose([A.Normalize([385], [2691.76]), A.Lambda(p=1, image=toTensor)], bbox_params=A.BboxParams(format='coco', label_fields=['category_ids']))
 
     def __getitem__(self, idx):
         """
@@ -67,13 +68,14 @@ class CustomDataset(Dataset):
         iscrowd = torch.zeros(len(self.data['labels'][str(idx)]), dtype=torch.int64)
 
         target = {}
-        target["boxes"] = boxes
+        # target["boxes"] = boxes
         target["labels"] = labels
         target["image_id"] = img_id
         target["area"] = area
         target["iscrowd"] = iscrowd
-        transformed = self.transform(image=img)
+        transformed = self.transform(image=img, bboxes=boxes, category_ids=labels)
         img = transformed["image"]
+        target["boxes"] = torch.tensor(transformed["bboxes"])
 
         for idx, bboxes in enumerate(target['boxes']):
             target['boxes'][idx] = box_ops.box_xyxy_to_cxcywh(bboxes)
@@ -83,11 +85,11 @@ class CustomDataset(Dataset):
     def __len__(self):
         return self.data['rdms'].shape[0]
 
-# dataset = CustomDataset('../data/data.h5')
-# data_loader = DataLoader(dataset)
-#
-# for img, target in data_loader:
-#     print()
+dataset = CustomDataset('../data/data.h5', split='test')
+data_loader = DataLoader(dataset)
+
+for img, target in data_loader:
+    print()
 
 
 
