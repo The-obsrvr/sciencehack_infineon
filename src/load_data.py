@@ -39,7 +39,7 @@ def load_and_clean_data(path):
                     xmax = data['labels'][str(idx)][j][2] / w
                     ymax = data['labels'][str(idx)][j][3] / h
                     boxes.append([xmin, ymin, xmax, ymax])
-                    labels.append(data['labels'](idx)][j][-1])
+                    labels.append(data['labels'][str(idx)][j][-1])
             # if length of the box is not zero, then add the obj of interest to the frame list.
             if len(boxes) is not 0:
                 cleaned_frame.append(img)
