@@ -17,7 +17,6 @@ class CustomDataset(Dataset):
         self.data = h5py.File(path, 'r')
         self.split = split
         self.transform = A.Compose([A.Normalize([385], [2691.76]), A.Lambda(p=1, image=toTensor)])
-        # self.transform = F.Compose([F.ToTensor(), F.Normalize([385], [2691.76])])
 
     def __getitem__(self, idx):
         """
@@ -69,7 +68,7 @@ class CustomDataset(Dataset):
     def __len__(self):
         return self.data['rdms'].shape[0]
 
-dataset = CustomDataset('../data/data.h5')
+dataset = CustomDataset('../data/train.h5')
 data_loader = DataLoader(dataset)
 
 for img, target in data_loader:
