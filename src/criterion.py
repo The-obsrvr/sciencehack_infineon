@@ -7,8 +7,6 @@ from util.misc import (NestedTensor, nested_tensor_from_tensor_list,
                        accuracy, get_world_size, interpolate,
                        is_dist_avail_and_initialized)
 
-from .matcher import build_matcher
-
 
 class SetCriterion(nn.Module):
     """ This class computes the loss for DETR.
