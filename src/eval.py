@@ -1,10 +1,11 @@
 from utils import *
-from load_data import CustomDataset, load_and_clean_data
+from load_data import CustomDataset, load_and_clean_data, collate_fn
 
 from tqdm import tqdm
 from torch.utils.data import DataLoader
 from pprint import PrettyPrinter
 import torch
+
 # from map_eva import mean_avg_precision
 
 import csv
@@ -43,6 +44,7 @@ pp = PrettyPrinter()
 #
 # test_dataset = CustomDataset(test, split="test")
 # test_loader = DataLoader(test_dataset, batch_size=32)
+
 
 def evaluate(test_loader, model, epoch):
     """
@@ -90,7 +92,7 @@ def evaluate(test_loader, model, epoch):
 
         # Calculate mAP
         APs, mAP = calculate_mAP(det_boxes, det_labels, det_scores, true_boxes, true_labels)
-        # mAP = mean_avg_precision(det_boxes, true_boxes)
+
 
     # Print AP for each class
     pp.pprint(APs)

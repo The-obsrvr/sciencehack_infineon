@@ -11,14 +11,14 @@ import tarfile
 warnings.filterwarnings("ignore")
 
 # Data params
-data_path = "../../data/data.h5"
+data_path = "../data/data.h5"
 keep_difficult = False # use objects considered difficult to detect?
 
-n_classes = 3
+n_classes = 4
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Learning parameters
-checkpoint = None#"../../checkpoints/checkpoint_ssd300.pth.tar"  # path to model checkpoint, None if none
+checkpoint_file = None  #"../../checkpoints/checkpoint_ssd300.pth.tar"  # path to model checkpoint, None if none
 batch_size = 8  # batch size
 iterations = 1000  # number of iterations to train
 print_freq = 200  # print training status every __ batches
@@ -36,12 +36,14 @@ def main():
     Training.
     """
     global start_epoch, label_map, epoch, checkpoint, decay_lr_at
+
+    # Initialize Model
     biases = list()
     not_biases = list()
     model = SSD300(n_classes=n_classes)
     optimizer = torch.optim.SGD(params=[{'params': biases, 'lr': 2 * lr}, {'params': not_biases}],
                                 lr=lr, momentum=momentum, weight_decay=weight_decay)
-    # Initialize model or load checkpoint
+    # load checkpoint
     if checkpoint is None:
         start_epoch = 0
         # Initialize the optimizer, with twice the default learning rate for biases, as in the original Caffe repo
@@ -52,10 +54,9 @@ def main():
                 else:
                     not_biases.append(param)
     else:
-        # checkpoint_file = torch.load(checkpoint)
-        tar = tarfile.open(checkpoint)
-        model.load_state_dict(torch.load(checkpoint)['model'])
-        optimizer.load_state_dict(checkpoint_file['optimizer'])
+        checkpoint = torch.load(checkpoint_file)
+        model = checkpoint['model']
+        optimizer = checkpoint['optimizer']
         start_epoch = checkpoint['epoch'] + 1
         print('\nLoaded checkpoint from epoch %d.\n' % start_epoch)
 
@@ -64,8 +65,6 @@ def main():
     criterion = MultiBoxLoss(priors_cxcy=model.priors_cxcy).to(device)
 
     # Custom dataloaders
-    #  :TODO: change to our data loaders
-
     train_data, test = load_and_clean_data(data_path)
 
     train_dataset = CustomDataset(train_data, split="train")
@@ -135,7 +134,6 @@ def train(train_loader, test_loader, model, criterion, optimizer, epoch):
         # Backward prop.
         optimizer.zero_grad()
         loss.backward()
-qipiy8181
 
         # Clip gradients, if necessary
         if grad_clip is not None:

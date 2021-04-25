@@ -3,7 +3,7 @@ import pandas as pd
 import torch
 import h5py
 import albumentations as A
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 import torchvision.transforms.functional as F
 from sklearn.model_selection import train_test_split
 from util import box_ops
@@ -73,8 +73,9 @@ class CustomDataset(Dataset):
                 [random_special_aug, A.Normalize([385], [2691.76]), A.Resize(300, 300), A.Lambda(p=1, image=toTensor)],
                 bbox_params=A.BboxParams(format='coco', label_fields=['category_ids']))
         if split == 'test':
-            self.transform = A.Compose([A.Normalize([385], [2691.76]), A.Resize(300, 300), A.Lambda(p=1, image=toTensor)],
-                                       bbox_params=A.BboxParams(format='coco', label_fields=['category_ids']))
+            self.transform = A.Compose(
+                [A.Normalize([385], [2691.76]), A.Resize(300, 300), A.Lambda(p=1, image=toTensor)],
+                bbox_params=A.BboxParams(format='coco', label_fields=['category_ids']))
 
     def __getitem__(self, idx):
         """
@@ -88,22 +89,17 @@ class CustomDataset(Dataset):
         # convert boxes, labels and image id into a torch.Tensor
         boxes = torch.tensor(self.data.iloc[idx]["boxes"], dtype=torch.float32)
         labels = torch.tensor(self.data.iloc[idx]["labels"], dtype=torch.float32)
-        img_id = torch.Tensor(idx)
-
-        area = h * w * (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
-        # suppose all instances are not crowd
-        iscrowd = torch.zeros(len(self.data.iloc[idx]['labels']), dtype=torch.int64)
 
         transformed = self.transform(image=img, bboxes=boxes, category_ids=labels)
         img = transformed["image"]
-        
-        target = {"boxes": torch.tensor(transformed["bboxes"], dtype=torch.float32), "labels": labels,}
-                  # "image_id": img_id, "area": area, "iscrowd": iscrowd}
+
+        target = {"boxes": torch.tensor(transformed["bboxes"], dtype=torch.float32), "labels": labels, }
 
         for i, bboxes in enumerate(target['boxes']):
             target['boxes'][i] = box_ops.box_xyxy_to_cxcywh(bboxes)
 
-        return img.repeat(3, 1, 1), torch.tensor((target['boxes']),dtype=torch.float32)[None,...], torch.tensor((target['labels']))[None,...], torch.zeros(1)
+        return img.repeat(3, 1, 1), torch.tensor((target['boxes']), dtype=torch.float32)[None, ...], \
+               torch.tensor((target['labels']))[None, ...], torch.zeros(1)
 
     def __len__(self):
         if self.split == 'train':
@@ -138,22 +134,3 @@ def collate_fn(batch):
     images = torch.stack(images, dim=0)
 
     return images, boxes, labels, difficulties  # tensor (N, 3, 300, 300), 3 lists of N tensors each
-
-"""
-to run:
-
-train, test = load_and_clean_data(path)
-
-train_dataset = CustomDataset(train, split="train")
-test_dataset = CustomDataset(test, split="test")
-
-train_dataloader = DataLoader(train_dataset)
-
-"""
-# train, test = load_and_clean_data('../../data/data.h5')
-# dataset = CustomDataset(train, split='train')
-# data_loader = DataLoader(dataset)
-#
-# for img, box, label, _ in data_loader:
-#     print()
-
