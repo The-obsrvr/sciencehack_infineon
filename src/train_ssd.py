@@ -19,7 +19,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Learning parameters
 checkpoint_file = None  #"../../checkpoints/checkpoint_ssd300.pth.tar"  # path to model checkpoint, None if none
-batch_size = 8  # batch size
+batch_size = 32  # batch size
 iterations = 1000  # number of iterations to train
 print_freq = 200  # print training status every __ batches
 lr = 1e-6  # learning rate

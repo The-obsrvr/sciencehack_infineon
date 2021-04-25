@@ -11,7 +11,7 @@ import torch
 import csv
 
 def write_csv(data):
-    with open('example.csv', 'a') as outfile:
+    with open('example2.csv', 'a') as outfile:
         writer = csv.writer(outfile)
         writer.writerow(data)
 
