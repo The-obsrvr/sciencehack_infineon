@@ -6,6 +6,9 @@ from ssd300 import SSD300, MultiBoxLoss
 from utils import *
 from load_data import CustomDataset, load_and_clean_data, collate_fn
 from eval import evaluate
+import warnings
+import tarfile
+warnings.filterwarnings("ignore")
 
 # Data params
 data_path = "../../data/data.h5"
@@ -17,14 +20,14 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Learning parameters
 checkpoint = None#"../../checkpoints/checkpoint_ssd300.pth.tar"  # path to model checkpoint, None if none
 batch_size = 8  # batch size
-iterations = 100  # number of iterations to train
+iterations = 1000  # number of iterations to train
 print_freq = 200  # print training status every __ batches
-lr = 1e-3  # learning rate
-decay_lr_at = [70, 90]  # decay learning rate after these many iterations
+lr = 1e-6  # learning rate
+decay_lr_at = [100, 200, 300, 400, 500 , 600, 700, 800, 900]  # decay learning rate after these many iterations
 decay_lr_to = 0.1  # decay learning rate to this fraction of the existing learning rate
 momentum = 0.9  # momentum
 weight_decay = 5e-4  # weight decay
-grad_clip = None  # clip if gradients are exploding, which may happen at larger batch sizes (sometimes at 32) - you will recognize it by a sorting error in the MuliBox loss calculation
+grad_clip = 1  # clip if gradients are exploding, which may happen at larger batch sizes (sometimes at 32) - you will recognize it by a sorting error in the MuliBox loss calculation
 
 cudnn.benchmark = True
 
@@ -49,8 +52,9 @@ def main():
                 else:
                     not_biases.append(param)
     else:
-        checkpoint_file = torch.load(checkpoint)
-        model.load_state_dict(checkpoint_file['model'])
+        # checkpoint_file = torch.load(checkpoint)
+        tar = tarfile.open(checkpoint)
+        model.load_state_dict(torch.load(checkpoint)['model'])
         optimizer.load_state_dict(checkpoint_file['optimizer'])
         start_epoch = checkpoint['epoch'] + 1
         print('\nLoaded checkpoint from epoch %d.\n' % start_epoch)
@@ -131,6 +135,7 @@ def train(train_loader, test_loader, model, criterion, optimizer, epoch):
         # Backward prop.
         optimizer.zero_grad()
         loss.backward()
+qipiy8181
 
         # Clip gradients, if necessary
         if grad_clip is not None:
@@ -144,7 +149,6 @@ def train(train_loader, test_loader, model, criterion, optimizer, epoch):
 
         start = time.time()
 
-        evaluate(test_loader=test_loader, model=model)
         # Print status
         if i % print_freq == 0:
             print('Epoch: [{0}][{1}/{2}]\t'
@@ -153,6 +157,7 @@ def train(train_loader, test_loader, model, criterion, optimizer, epoch):
                   'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(epoch, i, len(train_loader),
                                                                   batch_time=batch_time,
                                                                   data_time=data_time, loss=losses))
+    evaluate(test_loader=test_loader, model=model, epoch=epoch)
     del predicted_locs, predicted_scores, images, boxes, labels  # free some memory since their histories may be stored
 
 

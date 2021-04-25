@@ -83,7 +83,6 @@ class CustomDataset(Dataset):
         :return: radar_frame and its corresponding target list
         """
         # load the image
-        print(idx)
         img = np.array(self.data.iloc[idx]['img'])
         h, w = img.shape[0], img.shape[1]
         # convert boxes, labels and image id into a torch.Tensor

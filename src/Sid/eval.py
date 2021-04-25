@@ -5,10 +5,17 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader
 from pprint import PrettyPrinter
 import torch
-from map_eva import mean_avg_precision
+# from map_eva import mean_avg_precision
+
+import csv
+
+def write_csv(data):
+    with open('example.csv', 'a') as outfile:
+        writer = csv.writer(outfile)
+        writer.writerow(data)
 
 # # Good formatting when printing the APs for each class and mAP
-# pp = PrettyPrinter()
+pp = PrettyPrinter()
 #
 # # Parameters
 # data_path = '../../data/data.h5'
@@ -37,7 +44,7 @@ from map_eva import mean_avg_precision
 # test_dataset = CustomDataset(test, split="test")
 # test_loader = DataLoader(test_dataset, batch_size=32)
 
-def evaluate(test_loader, model):
+def evaluate(test_loader, model, epoch):
     """
     Evaluate.
     :param test_loader: DataLoader for test data
@@ -82,12 +89,13 @@ def evaluate(test_loader, model):
             true_difficulties.extend(difficulties)
 
         # Calculate mAP
-        # APs, mAP = calculate_mAP(det_boxes, det_labels, det_scores, true_boxes, true_labels, true_difficulties)
-        mAP = mean_avg_precision(det_boxes, true_boxes)
+        APs, mAP = calculate_mAP(det_boxes, det_labels, det_scores, true_boxes, true_labels)
+        # mAP = mean_avg_precision(det_boxes, true_boxes)
 
     # Print AP for each class
-    # pp.pprint(APs)
+    pp.pprint(APs)
 
+    write_csv([epoch, mAP])
     print('\nMean Average Precision (mAP): %.3f' % mAP)
 
 

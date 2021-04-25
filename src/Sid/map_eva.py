@@ -1,6 +1,6 @@
 import torch
 from collections import Counter
-from iou import intersection_over_union
+import iou as IOU
 
 def mean_avg_precision(
     pred_boxes, true_boxes, iou_threshold = 0.5, box_format="corners", num_classes = 4):
@@ -44,7 +44,7 @@ def mean_avg_precision(
             best_iou = 0
 
             for idx, gt in enumerate(ground_truth_img):
-                iou = intersection_over_union(
+                iou = IOU.intersection_over_union(
                     torch.tensor(detection[3:]),
                     torch.tensor(gt[3:]),
                     box_format = box_format,
