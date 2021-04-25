@@ -44,7 +44,7 @@ def main():
     optimizer = torch.optim.SGD(params=[{'params': biases, 'lr': 2 * lr}, {'params': not_biases}],
                                 lr=lr, momentum=momentum, weight_decay=weight_decay)
     # load checkpoint
-    if checkpoint is None:
+    if checkpoint_file is None:
         start_epoch = 0
         # Initialize the optimizer, with twice the default learning rate for biases, as in the original Caffe repo
         for param_name, param in model.named_parameters():
@@ -155,7 +155,7 @@ def train(train_loader, test_loader, model, criterion, optimizer, epoch):
                   'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(epoch, i, len(train_loader),
                                                                   batch_time=batch_time,
                                                                   data_time=data_time, loss=losses))
-    evaluate(test_loader=test_loader, model=model, epoch=epoch)
+    evaluate(test_loader=test_loader, model=model, epoch=epoch, loss=loss.item())
     del predicted_locs, predicted_scores, images, boxes, labels  # free some memory since their histories may be stored
 
 

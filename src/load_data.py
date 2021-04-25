@@ -71,11 +71,11 @@ class CustomDataset(Dataset):
         if split == 'train':
             self.transform = A.Compose(
                 [random_special_aug, A.Normalize([385], [2691.76]), A.Resize(300, 300), A.Lambda(p=1, image=toTensor)],
-                bbox_params=A.BboxParams(format='coco', label_fields=['category_ids']))
+                bbox_params=A.BboxParams(format='pascal_voc', label_fields=['category_ids']))
         if split == 'test':
             self.transform = A.Compose(
                 [A.Normalize([385], [2691.76]), A.Resize(300, 300), A.Lambda(p=1, image=toTensor)],
-                bbox_params=A.BboxParams(format='coco', label_fields=['category_ids']))
+                bbox_params=A.BboxParams(format='pascal_voc', label_fields=['category_ids']))
 
     def __getitem__(self, idx):
         """
@@ -95,8 +95,8 @@ class CustomDataset(Dataset):
 
         target = {"boxes": torch.tensor(transformed["bboxes"], dtype=torch.float32), "labels": labels, }
 
-        for i, bboxes in enumerate(target['boxes']):
-            target['boxes'][i] = box_ops.box_xyxy_to_cxcywh(bboxes)
+        # for i, bboxes in enumerate(target['boxes']):
+        #     target['boxes'][i] = box_ops.box_xyxy_to_cxcywh(bboxes)
 
         return img.repeat(3, 1, 1), torch.tensor((target['boxes']), dtype=torch.float32)[None, ...], \
                torch.tensor((target['labels']))[None, ...], torch.zeros(1)

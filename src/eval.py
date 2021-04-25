@@ -46,7 +46,7 @@ pp = PrettyPrinter()
 # test_loader = DataLoader(test_dataset, batch_size=32)
 
 
-def evaluate(test_loader, model, epoch):
+def evaluate(test_loader, model, epoch, loss):
     """
     Evaluate.
     :param test_loader: DataLoader for test data
@@ -97,7 +97,7 @@ def evaluate(test_loader, model, epoch):
     # Print AP for each class
     pp.pprint(APs)
 
-    write_csv([epoch, mAP])
+    write_csv([epoch, mAP, loss])
     print('\nMean Average Precision (mAP): %.3f' % mAP)
 
 
