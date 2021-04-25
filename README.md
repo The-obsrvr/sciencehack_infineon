@@ -1,11 +1,11 @@
 # Object Detection and Recognition using RADAR Technology.
 
-#####  Sponsored by Infineon and organized by TUM JA (Science Hack 2021) 
+  Sponsored by Infineon and organized by TUM JA (Science Hack 2021) 
 
----
+<b> Team: fahrRAD </b>
 
 Team Members:
-Aparna , Harsha Philips, Siddharth Bhargava, Tanveer Hannan, Yadu, Yue Xiong
+Aparna Justin, Harsha Philips, Siddharth Bhargava, Tanveer Hannan, Yadu Krishna Morassery Veetil, Yue Xiong
 
 ---
 
